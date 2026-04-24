@@ -9,14 +9,15 @@
             --bg-color: #f4f7f6;
             --column-bg: #e2e4e6;
             --card-text: #333;
-            --primary-btn: #28a745;
+            --add-btn-color: #007bff; /* Canlı Mavi */
+            --add-btn-hover: #0056b3;
         }
 
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: var(--bg-color); 
             margin: 0;
-            padding: 15px; 
+            padding: 15px 15px 80px 15px; /* Alt buton için boşluk bıraktık */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -29,7 +30,6 @@
             max-width: 1200px;
         }
 
-        /* MOBİL UYUM: Ekran küçükse sütunları alt alta diz */
         @media (max-width: 768px) {
             .board {
                 flex-direction: column;
@@ -90,16 +90,28 @@
             padding-left: 10px;
         }
 
-        .add-btn { 
-            background: var(--primary-btn); 
+        /* Sabit Alt Buton */
+        .fixed-add-btn { 
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--add-btn-color); 
             color: white; 
             border: none; 
-            border-radius: 8px; 
-            padding: 14px; 
+            border-radius: 50px; /* Yuvarlak tasarım */
+            padding: 15px 40px; 
             cursor: pointer; 
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
-            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.4);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        .fixed-add-btn:hover { 
+            background: var(--add-btn-hover);
+            transform: translateX(-50%) scale(1.05);
         }
     </style>
 </head>
@@ -109,7 +121,6 @@
     <div class="column" id="todo">
         <h3>YAPILACAKLAR</h3>
         <div class="cards-container" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-        <button class="add-btn" onclick="addCard('todo')">+ Kart Ekle</button>
     </div>
 
     <div class="column" id="doing">
@@ -122,6 +133,8 @@
         <div class="cards-container" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
     </div>
 </div>
+
+<button class="fixed-add-btn" onclick="addCard('todo')">+ Yeni Kart Ekle</button>
 
 <script>
     const cardColors = ['#FFEBEE', '#E3F2FD', '#E8F5E9', '#FFFDE7', '#F3E5F5', '#E0F7FA', '#FFF3E0'];
@@ -147,7 +160,7 @@
     }
 
     function addCard(columnId) {
-        var text = prompt("Ne yapacaksın?");
+        var text = prompt("İş başlığı:");
         if (text && text.trim() !== "") {
             createCard(text, columnId);
             saveCards();
@@ -167,7 +180,7 @@
     }
 
     function deleteCard(id) {
-        if(confirm("Silmek istiyor musun?")) {
+        if(confirm("Bu görevi silmek istediğine emin misin?")) {
             document.getElementById(id).remove();
             saveCards();
         }
@@ -180,11 +193,11 @@
                 data[col.id].push({ id: card.id, text: card.querySelector('span').innerText, color: card.style.backgroundColor });
             });
         });
-        localStorage.setItem('myFinalKanban', JSON.stringify(data));
+        localStorage.setItem('myFinalKanbanV2', JSON.stringify(data));
     }
 
     function loadCards() {
-        const data = JSON.parse(localStorage.getItem('myFinalKanban'));
+        const data = JSON.parse(localStorage.getItem('myFinalKanbanV2'));
         if (data) {
             Object.keys(data).forEach(colId => {
                 data[colId].forEach(card => createCard(card.text, colId, card.id, card.color));
