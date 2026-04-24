@@ -1,33 +1,43 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Renkli Kanban Panom</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Renkli Mobil Kanban</title>
     <style>
         :root {
             --bg-color: #f4f7f6;
             --column-bg: #e2e4e6;
             --card-text: #333;
             --primary-btn: #28a745;
-            --primary-btn-hover: #218838;
         }
 
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: var(--bg-color); 
             margin: 0;
-            display: flex; 
-            justify-content: center; 
-            padding: 20px; 
+            padding: 15px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .board { 
             display: flex; 
             gap: 20px; 
             width: 100%; 
-            max-width: 1200px; 
-            align-items: flex-start;
+            max-width: 1200px;
+        }
+
+        /* MOBİL UYUM: Ekran küçükse sütunları alt alta diz */
+        @media (max-width: 768px) {
+            .board {
+                flex-direction: column;
+            }
+            .column {
+                width: 100% !important;
+                min-height: auto !important;
+            }
         }
 
         .column { 
@@ -39,20 +49,22 @@
             display: flex; 
             flex-direction: column;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            margin-bottom: 20px;
         }
 
         .column h3 { 
             text-align: center; 
             color: #444; 
-            margin-top: 0;
-            padding-bottom: 10px;
+            margin: 0 0 10px 0;
+            padding-bottom: 8px;
             border-bottom: 2px solid #ccc;
         }
 
         .cards-container { 
             flex-grow: 1; 
-            min-height: 100px; 
-            margin-top: 10px;
+            min-height: 80px; 
+            margin-top: 5px;
         }
 
         .card { 
@@ -61,45 +73,34 @@
             margin-bottom: 12px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.15); 
             cursor: grab; 
-            position: relative;
             display: flex;
             justify-content: space-between;
             align-items: center;
             word-break: break-word;
             color: var(--card-text);
-            transition: transform 0.2s;
         }
-
-        .card:active { cursor: grabbing; transform: scale(1.03); }
-        .card.dragging { opacity: 0.5; border: 2px dashed #888; }
 
         .delete-btn { 
             cursor: pointer; 
-            color: rgba(0,0,0,0.5); 
+            color: rgba(0,0,0,0.4); 
             font-weight: bold; 
             border: none; 
             background: none; 
-            font-size: 18px;
-            padding: 0 5px;
-            margin-left: 10px;
+            font-size: 20px;
+            padding-left: 10px;
         }
-
-        .delete-btn:hover { color: #dc3545; }
 
         .add-btn { 
             background: var(--primary-btn); 
             color: white; 
             border: none; 
             border-radius: 8px; 
-            padding: 12px; 
+            padding: 14px; 
             cursor: pointer; 
             font-size: 16px;
             font-weight: bold;
-            transition: background 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 10px;
         }
-
-        .add-btn:hover { background: var(--primary-btn-hover); }
     </style>
 </head>
 <body>
@@ -123,60 +124,36 @@
 </div>
 
 <script>
-    // Kullanılabilir yumuşak/pastel renk paleti
-    const cardColors = [
-        '#FFEBEE', // Pastel Kırmızı
-        '#E3F2FD', // Pastel Mavi
-        '#E8F5E9', // Pastel Yeşil
-        '#FFFDE7', // Pastel Sarı
-        '#F3E5F5', // Pastel Mor
-        '#E0F7FA', // Pastel Turkuaz
-        '#FFF3E0', // Pastel Turuncu
-        '#F1F8E9'  // Pastel Açık Yeşil
-    ];
+    const cardColors = ['#FFEBEE', '#E3F2FD', '#E8F5E9', '#FFFDE7', '#F3E5F5', '#E0F7FA', '#FFF3E0'];
 
     window.onload = loadCards;
 
-    function allowDrop(ev) {
-        ev.preventDefault();
-    }
+    function allowDrop(ev) { ev.preventDefault(); }
 
     function drag(ev) {
         ev.dataTransfer.setData("text", ev.target.id);
-        ev.target.classList.add('dragging');
     }
 
     function drop(ev) {
         ev.preventDefault();
         var data = ev.dataTransfer.getData("text");
         var card = document.getElementById(data);
-        card.classList.remove('dragging');
-        
         let target = ev.target;
         if (!target.classList.contains('cards-container')) {
             target = target.closest('.column').querySelector('.cards-container');
         }
-        
         target.appendChild(card);
         saveCards();
     }
 
-    // Rastgele renk seçme fonksiyonu
-    function getRandomColor() {
-        return cardColors[Math.floor(Math.random() * cardColors.length)];
-    }
-
     function addCard(columnId) {
-        var text = prompt("İş başlığı girin:");
+        var text = prompt("Ne yapacaksın?");
         if (text && text.trim() !== "") {
-            // Yeni kart için rastgele bir renk seç
-            const color = getRandomColor();
-            createCard(text, columnId, null, color);
+            createCard(text, columnId);
             saveCards();
         }
     }
 
-    // createCard fonksiyonuna color parametresi eklendi
     function createCard(text, columnId, cardId = null, color = null) {
         var container = document.getElementById(columnId).querySelector('.cards-container');
         var card = document.createElement("div");
@@ -184,54 +161,33 @@
         card.id = cardId || "card-" + Date.now();
         card.draggable = true;
         card.ondragstart = drag;
-        card.ondragend = (e) => e.target.classList.remove('dragging');
-        
-        // Kartın rengini ayarla (yeni kartsa color'dan, yükleniyorsa kaydedilenden)
-        card.style.backgroundColor = color || getRandomColor();
-        
-        card.innerHTML = `
-            <span>${text}</span>
-            <button class="delete-btn" onclick="deleteCard('${card.id}')">&times;</button>
-        `;
-        
+        card.style.backgroundColor = color || cardColors[Math.floor(Math.random() * cardColors.length)];
+        card.innerHTML = `<span>${text}</span><button class="delete-btn" onclick="deleteCard('${card.id}')">&times;</button>`;
         container.appendChild(card);
     }
 
     function deleteCard(id) {
-        if(confirm("Bu kartı silmek istediğine emin misin?")) {
+        if(confirm("Silmek istiyor musun?")) {
             document.getElementById(id).remove();
             saveCards();
         }
     }
 
     function saveCards() {
-        const columns = ['todo', 'doing', 'done'];
         let data = { todo: [], doing: [], done: [] };
-
-        columns.forEach(colId => {
-            const container = document.getElementById(colId).querySelector('.cards-container');
-            container.querySelectorAll('.card').forEach(card => {
-                data[colId].push({
-                    id: card.id,
-                    text: card.querySelector('span').innerText,
-                    // Kartın rengini de kaydet
-                    color: card.style.backgroundColor
-                });
+        document.querySelectorAll('.column').forEach(col => {
+            col.querySelectorAll('.card').forEach(card => {
+                data[col.id].push({ id: card.id, text: card.querySelector('span').innerText, color: card.style.backgroundColor });
             });
         });
-
-        localStorage.setItem('myColorKanbanData', JSON.stringify(data));
+        localStorage.setItem('myFinalKanban', JSON.stringify(data));
     }
 
     function loadCards() {
-        const savedData = localStorage.getItem('myColorKanbanData');
-        if (savedData) {
-            const data = JSON.parse(savedData);
+        const data = JSON.parse(localStorage.getItem('myFinalKanban'));
+        if (data) {
             Object.keys(data).forEach(colId => {
-                data[colId].forEach(card => {
-                    // Kayıtlı rengi createCard'a gönder
-                    createCard(card.text, colId, card.id, card.color);
-                });
+                data[colId].forEach(card => createCard(card.text, colId, card.id, card.color));
             });
         }
     }
